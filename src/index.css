@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,6 +7,18 @@
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
-    @apply bg-[#F1F3F4] text-[#1E293B];
+    @apply bg-dashboard-bg text-black antialiased;
   }
+}
+
+/* Custom classes for the specific Figma look */
+.font-black {
+  font-weight: 900;
+}
+
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }

@@ -1,60 +1,37 @@
 import React from 'react';
-import { Search, ShoppingCart, Bell, Heart, User, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, ShoppingCart, Bell, Settings, User } from 'lucide-react';
 
 const Header = () => {
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-4">
-        
-        {/* Logo */}
-        <Link to="/" className="text-blue-600 font-bold text-lg md:text-xl flex-shrink-0 whitespace-nowrap hidden sm:block">
-          Web Ban Hang
-        </Link>
-        <Link to="/" className="text-blue-600 font-bold text-lg sm:hidden">
-          WBH
-        </Link>
-
-        {/* Search Bar */}
-        <div className="flex-1 max-w-2xl px-2 md:px-8">
-          <div className="relative flex items-center w-full h-9 bg-gray-100 rounded-full overflow-hidden">
-            <Search className="w-4 h-4 text-gray-500 ml-3 flex-shrink-0" />
-            <input 
-              type="text" 
-              className="w-full bg-transparent border-none outline-none px-3 text-sm text-gray-700" 
-              placeholder="Tìm kiếm..."
-            />
-          </div>
+    <header className="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-10 fixed top-0 right-0 left-64 z-10 shadow-sm">
+      <div className="flex-1 max-w-md relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Search size={22} className="text-black" />
         </div>
+        <input
+          type="text"
+          placeholder="Tìm kiếm..."
+          className="block w-full pl-12 pr-4 py-3 bg-gray-300 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 text-lg"
+        />
+      </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 sm:gap-6 flex-shrink-0">
-          <div className="flex items-center gap-3 sm:gap-4 text-gray-700">
-            <button className="hover:text-blue-600 transition-colors">
-              <ShoppingCart className="w-5 h-5" />
-            </button>
-            <button className="hidden sm:block hover:text-blue-600 transition-colors">
-              <Bell className="w-5 h-5" />
-            </button>
-            <button className="hidden md:block hover:text-blue-600 transition-colors">
-              <TrendingUp className="w-5 h-5" />
-            </button>
-            <button className="hidden sm:block hover:text-blue-600 transition-colors">
-              <Heart className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button className="hidden md:block px-4 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
-              Dang Nhap
-            </button>
-            <button className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
-              Dang Ky
-            </button>
-            <button className="ml-1 text-gray-700 hover:text-blue-600">
-              <Link to="/member"><User className="w-6 h-6" /></Link>
-            </button>
-          </div>
+      <div className="flex items-center space-x-8 ml-8">
+        <button className="text-black hover:text-primary transition-colors">
+          <ShoppingCart size={32} />
+        </button>
+        <button className="text-black hover:text-primary transition-colors relative">
+           <Bell size={32} />
+           <span className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full border-2 border-white"></span>
+        </button>
+        <button className="text-black hover:text-primary transition-colors">
+          <Settings size={32} />
+        </button>
+        
+        <div className="flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-full border border-gray-100 shadow-sm">
+           <span className="text-lg font-black italic uppercase tracking-wider text-black">ADMIN</span>
+           <div className="bg-gray-300 p-2 rounded-full">
+               <User size={32} className="text-black" />
+           </div>
         </div>
       </div>
     </header>

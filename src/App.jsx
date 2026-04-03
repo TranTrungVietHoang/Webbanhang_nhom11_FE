@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import RewardsDashboard from './pages/RewardsDashboard';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/product/:id" element={<ProductDetailPage />} />
+            <Route path="/rewards" element={<RewardsDashboard />} />
             <Route path="*" element={<div className="container mx-auto px-4 py-20 text-center text-2xl font-bold">404 - Trang không tìm thấy</div>} />
           </Routes>
         </main>

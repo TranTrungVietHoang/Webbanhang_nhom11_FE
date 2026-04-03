@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Bell, Heart, User, Search, Menu } from 'lucide-react';
+import { ShoppingCart, Bell, Heart, User, Search, Menu, TrendingUp } from 'lucide-react';
 
 const Navbar = () => {
   return (
@@ -31,6 +31,12 @@ const Navbar = () => {
           <button className="hidden sm:block p-2 hover:bg-slate-100 rounded-full transition-colors">
             <Bell className="w-6 h-6 text-slate-600" />
           </button>
+
+          <Link to="/rewards" className="hidden sm:flex items-center gap-2 p-2 hover:bg-slate-100 rounded-full transition-colors group">
+            <div className="w-6 h-6 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-all">
+               <TrendingUp className="w-4 h-4" />
+            </div>
+          </Link>
 
           <button className="hidden sm:block p-2 hover:bg-slate-100 rounded-full transition-colors">
             <Heart className="w-6 h-6 text-slate-600" />

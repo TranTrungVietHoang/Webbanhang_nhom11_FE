@@ -10,15 +10,20 @@ export default {
         primary: {
           light: '#d28b8b',
           DEFAULT: '#bb6b6b',
-          dark: '#a15555',
+          dark: '#a15a5a',
+          blue: '#1a73e8',
         },
         sidebar: {
-          bg: '#252525',
-          hover: '#333333',
+          bg: '#1e1e1e',
+          hover: '#2d2d2d',
         },
         dashboard: {
           bg: '#f4f4f4',
         }
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        serif: ['Inter', 'sans-serif'],
       }
     },
   },

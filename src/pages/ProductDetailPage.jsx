@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus, Check, Share2 } from 'lucide-react';
+import { Star, ShoppingCart, Heart, ArrowLeft, Plus, Minus, Check, Share2, ShieldCheck, Truck, RotateCcw, ChevronRight, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ProductDetailPage = () => {
@@ -12,226 +12,264 @@ const ProductDetailPage = () => {
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    // Fetch current product
-    fetch(`http://localhost:3000/api/products/${id}`)
-      .then(res => res.json())
-      .then(data => {
+    const fetchProductData = async () => {
+      try {
+        setLoading(true);
+        // Fetch current product
+        const res = await fetch(`http://localhost:3000/api/products/${id}`);
+        const data = await res.json();
         setProduct(data);
         
         // Fetch all products to find similar ones
-        fetch(`http://localhost:3000/api/products`)
-          .then(res => res.json())
-          .then(allProducts => {
-            const similar = allProducts
-              .filter(p => p.category === data.category && p.id !== data.id)
-              .slice(0, 3);
-            setSimilarProducts(similar.length > 0 ? similar : allProducts.filter(p => p.id !== data.id).slice(0, 3));
-            setLoading(false);
-          });
-      })
-      .catch(err => {
+        const allRes = await fetch(`http://localhost:3000/api/products`);
+        const allProducts = await allRes.json();
+        
+        const similar = allProducts
+          .filter(p => p.category === data.category && p.id !== data.id)
+          .slice(0, 4);
+        
+        setSimilarProducts(similar.length > 0 ? similar : allProducts.filter(p => p.id !== data.id).slice(0, 4));
+        setLoading(false);
+        window.scrollTo(0, 0);
+      } catch (err) {
         console.error("Error fetching product:", err);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchProductData();
   }, [id]);
 
   if (loading) return (
-    <div className="container mx-auto px-4 py-32 flex justify-center items-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+    <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+      <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
     </div>
   );
 
   if (!product) return (
-    <div className="container mx-auto px-4 py-32 text-center">
-      <h2 className="text-3xl font-bold mb-4">Sản phẩm không tồn tại</h2>
-      <Link to="/" className="btn-primary inline-flex">Quay lại trang chủ</Link>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC] space-y-6">
+      <h2 className="text-4xl font-black text-slate-800 uppercase italic tracking-tighter">Sản phẩm không tồn tại</h2>
+      <Link to="/" className="px-8 py-3 bg-blue-600 text-white rounded-full font-black uppercase text-sm tracking-widest hover:bg-blue-700 transition-all shadow-xl">Quay lại trang chủ</Link>
     </div>
   );
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <Link to="/" className="flex items-center gap-2 text-slate-500 hover:text-blue-600 mb-8 font-medium transition-colors">
-        <ArrowLeft className="w-5 h-5" /> Quay lại
-      </Link>
+  const images = product.detailedImages || [product.image];
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
-        {/* Gallery */}
-        <div className="lg:col-span-7 space-y-4">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="aspect-[4/3] rounded-3xl overflow-hidden bg-slate-100 relative group"
-          >
-            <img 
-              src={product.detailedImages ? product.detailedImages[activeImage] : product.image} 
-              alt={product.name} 
-              className="w-full h-full object-cover"
-            />
-            <button className="absolute top-4 right-4 p-3 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-red-500 shadow-sm transition-all">
-              <Heart className="w-6 h-6" />
-            </button>
-          </motion.div>
-          
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-            {(product.detailedImages || [product.image]).map((img, index) => (
-              <button 
-                key={index}
-                onClick={() => setActiveImage(index)}
-                className={`w-24 h-20 rounded-xl overflow-hidden border-2 transition-all shrink-0 ${
-                  activeImage === index ? 'border-blue-600 shadow-md ring-2 ring-blue-100' : 'border-transparent hover:border-slate-300'
-                }`}
+  return (
+    <div className="bg-[#F8FAFC] min-h-screen">
+      {/* Breadcrumb & Navigation */}
+      <nav className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-2 text-sm font-bold text-slate-400 uppercase tracking-widest">
+          <Link to="/" className="hover:text-blue-600 transition-colors flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" /> TRANG CHỦ
+          </Link>
+          <ChevronRight size={14} />
+          <span className="text-slate-400">{product.category}</span>
+          <ChevronRight size={14} />
+          <span className="text-blue-600 truncate max-w-[200px]">{product.name}</span>
+        </div>
+      </nav>
+
+      <main className="container mx-auto px-4 pb-20">
+        <div className="bg-white rounded-[3rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+            {/* Gallery Section */}
+            <div className="p-8 lg:p-12 bg-slate-50/50 space-y-8">
+              <motion.div 
+                key={activeImage}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="aspect-square rounded-[2rem] overflow-hidden bg-white shadow-xl border border-white"
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </button>
+                <img 
+                  src={images[activeImage]} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+              
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                {images.map((img, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setActiveImage(idx)}
+                    className={`w-28 h-28 rounded-2xl overflow-hidden border-4 transition-all flex-shrink-0 ${
+                      activeImage === idx ? 'border-blue-600 scale-105 shadow-xl' : 'border-white opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Product Info Section */}
+            <div className="p-8 lg:p-16 space-y-10 self-center">
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-black uppercase tracking-widest border border-blue-200">
+                    {product.category}
+                  </span>
+                  <div className="flex items-center gap-2 text-amber-400">
+                    <Star size={20} fill="currentColor" />
+                    <span className="text-lg font-black text-slate-800 leading-none">{product.rating}</span>
+                    <span className="text-slate-400 font-bold ml-1 text-sm">({product.reviews?.length || 0} Đánh giá)</span>
+                  </div>
+                  <span className="flex items-center gap-1.5 text-emerald-600 text-xs font-black uppercase tracking-widest">
+                     <Check size={14} strokeWidth={3} /> Đang còn hàng
+                  </span>
+                </div>
+
+                <h1 className="text-4xl md:text-5xl font-black text-slate-800 leading-tight tracking-tighter uppercase italic underline decoration-blue-600/20 decoration-8 underline-offset-8">
+                  {product.name}
+                </h1>
+                
+                <div className="flex items-baseline gap-4">
+                  <p className="text-5xl font-black text-blue-600 tracking-tighter italic">
+                    {product.price.toLocaleString()}đ
+                  </p>
+                  <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Đã bán {product.sold}</p>
+                </div>
+              </div>
+
+              <div className="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 relative group">
+                <p className="text-slate-600 leading-relaxed font-medium text-lg italic">
+                  "{product.description}"
+                </p>
+                <div className="absolute -left-2 top-8 w-1 h-12 bg-blue-600 rounded-full"></div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-8">
+                  <span className="font-black text-slate-800 uppercase tracking-widest text-sm">Số lượng:</span>
+                  <div className="flex items-center bg-slate-100 rounded-2xl p-1.5 border border-slate-200">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="p-3 bg-white text-slate-600 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-90"
+                    >
+                      <Minus size={20} />
+                    </button>
+                    <span className="px-8 font-black text-xl min-w-[70px] text-center text-slate-800">{quantity}</span>
+                    <button 
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="p-3 bg-white text-slate-600 hover:text-blue-600 rounded-xl transition-all shadow-sm active:scale-90"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button className="flex-1 bg-white border-2 border-blue-600 text-blue-600 py-5 rounded-[1.5rem] font-black uppercase text-sm tracking-widest hover:bg-blue-50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg">
+                    <ShoppingCart size={22} />
+                    Thêm vào giỏ
+                  </button>
+                  <button className="flex-[1.5] bg-blue-600 text-white py-5 rounded-[1.5rem] font-black uppercase text-sm tracking-widest hover:bg-blue-700 shadow-2xl shadow-blue-300 transition-all active:scale-95 flex items-center justify-center gap-3">
+                    Mua ngay
+                  </button>
+                </div>
+              </div>
+
+              {/* Perks */}
+              <div className="grid grid-cols-3 gap-6 pt-10 border-t border-slate-100">
+                {[
+                  { icon: ShieldCheck, label: 'Bảo hành 12th', color: 'emerald' },
+                  { icon: Truck, label: 'Freeship toàn quốc', color: 'blue' },
+                  { icon: RotateCcw, label: 'Đổi trả 7 ngày', color: 'rose' }
+                ].map((perk, i) => (
+                  <div key={i} className="flex flex-col items-center text-center space-y-3">
+                    <div className={`p-4 bg-${perk.color}-50 text-${perk.color}-600 rounded-[1.25rem] transition-transform hover:scale-110`}>
+                      <perk.icon size={28} />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-slate-700 uppercase tracking-widest leading-tight">{perk.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Rewards Banner */}
+        <motion.div 
+           whileHover={{ scale: 1.01 }}
+           className="mt-16 bg-gradient-to-r from-blue-700 to-indigo-900 rounded-[2.5rem] p-10 text-white flex flex-col md:flex-row items-center justify-between shadow-2xl shadow-blue-200 relative overflow-hidden"
+        >
+           <div className="relative z-10 space-y-3 text-center md:text-left mb-8 md:mb-0">
+              <h3 className="text-3xl font-black uppercase tracking-tighter italic">MUA SẮM VÀ TÍCH ĐIỂM NGAY</h3>
+              <p className="font-medium text-blue-100 text-lg">Bạn sẽ nhận được <span className="text-blue-300 font-bold">+{Math.floor(product.price / 1000)} điểm</span> khi mua sản phẩm này.</p>
+           </div>
+           <Link to="/member" className="relative z-10 px-10 py-5 bg-white text-blue-900 rounded-2xl font-black uppercase text-sm tracking-widest hover:bg-slate-100 transition-all shadow-xl active:scale-95">
+              XEM VÍ ĐIỂM THƯỞNG
+           </Link>
+           <TrendingUp size={250} className="absolute right-[-50px] bottom-[-80px] text-white/5 rotate-12" />
+        </motion.div>
+
+        {/* Similar Products */}
+        <section className="mt-24 space-y-12">
+          <div className="flex items-center justify-between">
+             <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Sản phẩm tương tự</h2>
+             <Link to="/" className="text-blue-600 font-black flex items-center gap-2 group underline-offset-4 hover:underline uppercase text-sm tracking-widest">
+               Xem tất cả <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+             </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {similarProducts.map((p) => (
+              <Link key={p.id} to={`/product/${p.id}`} className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group">
+                <div className="aspect-square rounded-[1.5rem] overflow-hidden bg-slate-50 mb-4">
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                </div>
+                <h4 className="font-bold text-slate-800 text-lg line-clamp-1 mb-2 px-2 uppercase tracking-tight">{p.name}</h4>
+                <p className="font-black text-blue-600 px-2 italic">{p.price.toLocaleString()}đ</p>
+              </Link>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Info */}
-        <div className="lg:col-span-5 space-y-8">
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                {product.category}
-              </span>
-              <span className="flex items-center gap-1 text-green-600 text-xs font-bold">
-                 <Check className="w-3 h-3" /> Đang còn hàng
-              </span>
-            </div>
-            
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-800 leading-tight">
-              {product.name}
-            </h1>
-            
-            <div className="flex items-center gap-4 text-slate-500">
-               <div className="flex items-center text-yellow-500 font-bold">
-                 <Star className="w-5 h-5 fill-current mr-1" /> {product.rating}
-               </div>
-               <span className="text-slate-200">|</span>
-               <span>{product.reviews?.length || 0} Đánh giá</span>
-               <span className="text-slate-200">|</span>
-               <span>Đã bán {product.sold}</span>
-            </div>
-
-            <div className="pt-6 pb-2">
-               <span className="text-4xl font-bold text-red-600">
-                 {product.price.toLocaleString()}đ
-               </span>
-            </div>
-          </motion.div>
-
-          <div className="h-[1px] bg-slate-100"></div>
-
-          <div className="space-y-6">
-            <div className="flex items-center gap-6">
-              <span className="font-bold text-slate-700 min-w-[80px]">Số lượng:</span>
-              <div className="flex items-center bg-slate-100 rounded-xl p-1">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all"
+        {/* Reviews Section */}
+        <section className="mt-24 space-y-12">
+           <div className="flex items-center justify-between">
+             <h2 className="text-3xl font-black text-slate-800 uppercase italic tracking-tighter">Đánh giá thực tế ({product.reviews?.length || 0})</h2>
+             <button className="px-6 py-3 bg-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-900 transition-all">Viết đánh giá</button>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {product.reviews && product.reviews.length > 0 ? product.reviews.map((rev) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  key={rev.id} 
+                  className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-5"
                 >
-                  <Minus className="w-5 h-5" />
-                </button>
-                <span className="px-6 font-bold text-lg min-w-[60px] text-center">{quantity}</span>
-                <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <span className="text-sm text-slate-400">{product.stock} SP có sẵn</span>
-            </div>
-
-            <div className="flex gap-4 pt-4">
-              <button className="btn-secondary flex-1 py-4 text-lg border border-slate-200">
-                 <ShoppingCart className="w-6 h-6 mr-2" /> Thêm giỏ hàng
-              </button>
-              <button className="btn-primary flex-[1.5] py-4 text-lg text-white shadow-xl shadow-blue-200">
-                 Mua ngay
-              </button>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4 pt-6 text-slate-500 text-sm">
-             <button className="flex items-center gap-2 hover:text-blue-600 transition-colors"><Share2 className="w-4 h-4" /> Chia sẻ</button>
-             <div className="h-4 w-[1px] bg-slate-200"></div>
-             <button className="flex items-center gap-2 hover:text-red-500 transition-colors"><Heart className="w-4 h-4" /> Yêu thích</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Details & Reviews */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-t border-slate-100 pt-12">
-         <div className="lg:col-span-8 space-y-12">
-            <section>
-               <h2 className="text-2xl font-bold text-slate-800 mb-6">Mô tả sản phẩm</h2>
-               <div className="prose max-w-none text-slate-600 leading-relaxed bg-slate-50/50 p-8 rounded-3xl">
-                  {product.description}
-               </div>
-            </section>
-
-            <section>
-               <div className="flex items-center justify-between mb-8">
-                  <h2 className="text-2xl font-bold text-slate-800">Đánh giá sản phẩm</h2>
-                  <button className="btn-secondary !py-2 !px-4 text-sm">Viết đánh giá</button>
-               </div>
-               
-               <div className="space-y-8">
-                 {product.reviews && product.reviews.length > 0 ? (
-                    product.reviews.map(review => (
-                      <div key={review.id} className="pb-8 border-b border-slate-50 last:border-none">
-                         <div className="flex gap-4 items-start">
-                             <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl uppercase">
-                                {review.user.charAt(0)}
-                             </div>
-                             <div className="flex-1 space-y-2">
-                                <div className="flex items-center justify-between">
-                                   <div className="font-bold text-slate-800">{review.user}</div>
-                                   <div className="text-xs text-slate-400">{review.date}</div>
-                                </div>
-                                <div className="flex gap-1 text-yellow-400">
-                                   {[...Array(5)].map((_, i) => (
-                                     <Star key={i} className={`w-3.5 h-3.5 fill-current ${i >= review.rating ? 'text-slate-200 fill-none' : ''}`} />
-                                   ))}
-                                </div>
-                                <p className="text-slate-600 text-sm leading-relaxed">{review.comment}</p>
-                             </div>
-                         </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-black text-lg uppercase shadow-inner">
+                        {rev.user[0]}
                       </div>
-                    ))
-                 ) : (
-                    <div className="text-center py-12 bg-slate-50 rounded-3xl">
-                       <p className="text-slate-400">Chưa có đánh giá nào cho sản phẩm này.</p>
+                      <div>
+                        <p className="font-black text-slate-800 text-sm uppercase tracking-widest leading-none mb-1">{rev.user}</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-tight">{rev.date}</p>
+                      </div>
                     </div>
-                 )}
-               </div>
-            </section>
-         </div>
-
-         {/* Sidebar / Recommendations */}
-         <div className="lg:col-span-4 space-y-8">
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-                <h3 className="font-bold text-lg text-slate-800">Sản phẩm tương tự</h3>
-                {similarProducts.map((p) => (
-                  <Link key={p.id} to={`/product/${p.id}`} className="flex gap-4 group cursor-pointer">
-                     <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                        <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                     </div>
-                     <div className="space-y-1 py-1">
-                        <h4 className="font-medium text-sm text-slate-700 line-clamp-2 group-hover:text-blue-600 transition-colors">{p.name}</h4>
-                        <p className="font-bold text-red-600 text-sm">{p.price.toLocaleString()}đ</p>
-                     </div>
-                  </Link>
-                ))}
-            </div>
-         </div>
-      </div>
+                    <div className="flex gap-1 text-amber-400 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                      {[...Array(5)].map((_, i) => <Star key={i} size={14} fill={i < rev.rating ? "currentColor" : "none"} className={i < rev.rating ? "" : "text-slate-200"} />)}
+                      <span className="text-slate-800 font-black text-xs ml-1">{rev.rating}.0</span>
+                    </div>
+                  </div>
+                  <div className="p-6 bg-slate-50/50 rounded-2xl border-l-4 border-blue-600 relative">
+                     <p className="text-slate-600 font-medium leading-relaxed italic text-lg line-clamp-3">
+                       "{rev.comment}"
+                     </p>
+                  </div>
+                </motion.div>
+              )) : (
+                <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                  <p className="text-slate-400 font-black uppercase tracking-[0.2em]">Hãy là người đầu tiên đánh giá sản phẩm này</p>
+                </div>
+              )}
+           </div>
+        </section>
+      </main>
     </div>
   );
 };

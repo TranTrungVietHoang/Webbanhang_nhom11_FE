@@ -9,47 +9,49 @@ const ProductCard = ({ product }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
-      className="product-card group relative"
+      className="bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-500 hover:shadow-2xl border border-slate-100 group relative"
     >
       {/* Wishlist Button */}
-      <button className="absolute top-3 left-3 p-1.5 bg-white/80 hover:bg-white rounded-full text-slate-400 hover:text-red-500 transition-colors z-10 shadow-sm border border-slate-100">
-        <Heart className="w-4 h-4" />
+      <button className="absolute top-4 left-4 p-2.5 bg-white/80 backdrop-blur-md rounded-2xl text-slate-400 hover:text-rose-500 transition-all z-10 shadow-lg border border-white/20 hover:scale-110 active:scale-95 group/heart">
+        <Heart className="w-5 h-5 transition-colors group-hover/heart:fill-rose-500" />
       </button>
 
       {/* Product Image */}
-      <Link to={`/product/${product.id}`}>
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <img 
-            src={product.image} 
-            alt={product.name} 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        </div>
+      <Link to={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-slate-50">
+        <img 
+          src={product.image} 
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       </Link>
 
-      {/* Product Info */}
-      <div className="p-4 space-y-2">
+      <div className="p-7 space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-black uppercase tracking-widest border border-blue-100">
+            {product.category}
+          </span>
+          <div className="flex items-center gap-1.5 text-amber-400">
+            <Star size={16} fill="currentColor" />
+            <span className="text-sm font-black text-slate-700 leading-none">{product.rating}</span>
+          </div>
+        </div>
+
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-semibold text-slate-800 line-clamp-2 min-h-[48px] group-hover:text-blue-600 transition-colors">
+          <h3 className="font-bold text-slate-800 line-clamp-2 hover:text-blue-600 transition-colors h-12 leading-6 text-lg tracking-tight">
             {product.name}
           </h3>
         </Link>
         
-        <div className="flex items-center gap-2 text-sm">
-          <div className="flex items-center text-yellow-400 font-bold">
-            {product.rating} <Star className="w-4 h-4 ml-0.5 fill-current" />
-          </div>
-          <span className="text-slate-200">|</span>
-          <span className="text-slate-400">Đã bán {product.sold}</span>
-        </div>
-
         <div className="flex items-center justify-between pt-2">
-          <span className="text-lg font-bold text-red-600">
-            {product.price.toLocaleString()}đ
-          </span>
-          
-          <button className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all active:scale-95 shadow-sm border border-blue-100">
-            <ShoppingCart className="w-5 h-5" />
+          <div>
+            <p className="text-2xl font-black text-blue-600 tracking-tighter italic">
+              {product.price.toLocaleString()}đ
+            </p>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Đã bán {product.sold}</p>
+          </div>
+          <button className="p-4 bg-blue-600 text-white rounded-[1.25rem] shadow-xl shadow-blue-200 hover:bg-blue-700 active:scale-90 transition-all group/cart">
+            <ShoppingCart size={22} className="group-hover/cart:rotate-[-12deg] transition-transform" />
           </button>
         </div>
       </div>

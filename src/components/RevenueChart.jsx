@@ -17,7 +17,7 @@ const RevenueChart = ({ data }) => {
       <h3 className="text-xl font-black italic uppercase tracking-tighter self-start mb-6 text-black">Biểu đồ doanh thu</h3>
       <div className="w-full h-80 relative">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 20, right: 30, left: 80, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
             <XAxis 
                 dataKey="name" 
@@ -31,6 +31,7 @@ const RevenueChart = ({ data }) => {
                 tickLine={false} 
                 tick={{ fill: '#6B7280', fontSize: 14, fontWeight: 500 }}
                 dx={-10}
+                width={100}
                 tickFormatter={(value) => value.toLocaleString()}
             />
             <Tooltip 

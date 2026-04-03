@@ -13,7 +13,7 @@ import {
   AlertCircle,
   Clock
 } from 'lucide-react';
-import { loyaltyApi } from '../../services/loyaltyApi';
+import loyaltyApi from '../../api/loyaltyApi';
 import toast from 'react-hot-toast';
 
 const OrderHistoryPage = () => {

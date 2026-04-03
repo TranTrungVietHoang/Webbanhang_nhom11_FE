@@ -12,7 +12,7 @@ import {
   TrendingDown,
   Gift
 } from 'lucide-react';
-import { loyaltyApi } from '../../services/loyaltyApi';
+import loyaltyApi from '../../api/loyaltyApi';
 import toast from 'react-hot-toast';
 
 const DiscountCodesPage = () => {

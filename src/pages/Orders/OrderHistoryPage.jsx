@@ -1,127 +1,167 @@
-import React from 'react';
-import { Package, Truck, CheckCircle2, XCircle, Clock, ChevronRight, ExternalLink, Box, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const ORDERS = [
-  { id: 'ORD-9928', date: '10/04/2026', total: '1.250.000đ', status: 'Đang giao', items: 'iPhone 15 Pro, Ốp lưng Silicon', color: 'bg-blue-50 text-blue-600 border-blue-100', icon: Truck },
-  { id: 'ORD-8812', date: '05/04/2026', total: '450.000đ', status: 'Hoàn thành', items: 'Sạc 20W USB-C', color: 'bg-emerald-50 text-emerald-600 border-emerald-100', icon: CheckCircle2 },
-  { id: 'ORD-7701', date: '28/03/2026', total: '15.000.000đ', status: 'Hủy đơn', items: 'Macbook Air M2', color: 'bg-rose-50 text-rose-600 border-rose-100', icon: XCircle },
-  { id: 'ORD-6625', date: '20/03/2026', total: '2.100.000đ', status: 'Hoàn thành', items: 'AirPods Pro 2', color: 'bg-emerald-50 text-emerald-600 border-emerald-100', icon: CheckCircle2 },
-];
+import { 
+  ShoppingBag, 
+  Search, 
+  MapPin, 
+  Package, 
+  Truck, 
+  CheckCircle2, 
+  ExternalLink,
+  ChevronRight,
+  TrendingUp,
+  AlertCircle,
+  Clock
+} from 'lucide-react';
+import { loyaltyApi } from '../../services/loyaltyApi';
+import toast from 'react-hot-toast';
 
 const OrderHistoryPage = () => {
-  return (
-    <div className="bg-[#F8FAFC] min-h-screen pt-24 pb-20">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="space-y-12">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-4">
-              <motion.div 
-                 initial={{ opacity: 0, x: -20 }}
-                 animate={{ opacity: 1, x: 0 }}
-                 className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-xs font-black uppercase tracking-widest"
-              >
-                 <Package size={14} /> Quản lý đơn hàng
-              </motion.div>
-              <h1 className="text-5xl font-black text-slate-800 tracking-tighter uppercase italic">Lịch sử mua sắm</h1>
-              <p className="text-slate-500 font-medium text-lg max-w-md">Theo dõi chi tiết quá trình vận chuyển và lịch sử các đơn hàng đã đặt.</p>
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                setLoading(true);
+                // Integrating with loyalty history or dedicated orders endpoint if available
+                const data = await loyaltyApi.getHistory('user123');
+                // Filter for purchase actions and map to order-like structure
+                const mappedOrders = data
+                  .filter(item => item.action.toLowerCase().includes('đơn hàng') || item.action.toLowerCase().includes('mua'))
+                  .map((item, idx) => ({
+                    id: `ORD-${9900 + idx}`,
+                    date: item.date,
+                    status: 'Delivered',
+                    total: item.amount * 1000, // Dummy scale
+                    items: [item.action],
+                    points: item.amount
+                  }));
+                setOrders(mappedOrders);
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+                toast.error("Không thể tải lịch sử đơn hàng");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchOrders();
+    }, []);
+
+    const filteredOrders = orders.filter(o => 
+        o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        o.items.some(item => item.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    return (
+        <div className="bg-[#F8FAFC] min-h-screen pt-32 pb-20">
+            <div className="container mx-auto px-6">
+                <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8 text-white">
+                    <div className="space-y-4">
+                        <span className="inline-block px-4 py-1.5 bg-blue-600/10 text-blue-600 rounded-full text-xs font-black uppercase tracking-widest border border-blue-100">
+                           Purchase History
+                        </span>
+                        <h1 className="text-5xl font-black tracking-tighter uppercase italic text-slate-800">Đơn hàng của tôi</h1>
+                        <div className="w-24 h-2 bg-blue-600 rounded-full"></div>
+                    </div>
+                    
+                    <div className="flex-1 flex gap-4 max-w-xl w-full">
+                        <div className="relative flex-1 group">
+                           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors" size={20} />
+                           <input 
+                             type="text" 
+                             placeholder="Tìm kiếm đơn hàng theo mã hoặc sản phẩm..."
+                             value={searchTerm}
+                             onChange={(e) => setSearchTerm(e.target.value)}
+                             className="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-3xl outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-600 transition-all font-medium text-slate-700 shadow-sm"
+                           />
+                        </div>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="space-y-6">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="h-[200px] bg-white rounded-[2.5rem] animate-pulse border border-slate-100 shadow-sm"></div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="space-y-8">
+                        <AnimatePresence>
+                            {filteredOrders.map((order, idx) => (
+                                <motion.div 
+                                    key={order.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-xl shadow-slate-200/50 group"
+                                >
+                                    <div className="p-8 md:p-10 flex flex-col md:flex-row gap-10">
+                                        <div className="flex-shrink-0">
+                                           <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[2rem] flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
+                                              <ShoppingBag size={40} />
+                                           </div>
+                                        </div>
+                                        
+                                        <div className="flex-1 space-y-6">
+                                           <div className="flex flex-wrap items-center justify-between gap-4">
+                                              <div className="space-y-1">
+                                                 <h3 className="text-2xl font-black text-slate-800 uppercase italic tracking-tight">{order.id}</h3>
+                                                 <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em]">{order.date}</p>
+                                              </div>
+                                              <span className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2 ${
+                                                  order.status === 'Delivered' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
+                                              }`}>
+                                                  <CheckCircle2 size={14} /> {order.status === 'Delivered' ? 'Giao thành công' : 'Đang xử lý'}
+                                              </span>
+                                           </div>
+                                           
+                                           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4 border-t border-slate-50 italic font-medium">
+                                              <div className="flex items-center gap-3 text-slate-500">
+                                                 <Package size={20} className="text-blue-600/50" />
+                                                 <span>{order.items[0]}</span>
+                                              </div>
+                                              <div className="flex items-center gap-3 text-slate-500">
+                                                 <TrendingUp size={20} className="text-emerald-600/50" />
+                                                 <span>Tích lũy: <b className="text-slate-800">+{order.points} pts</b></span>
+                                              </div>
+                                              <div className="flex items-center gap-3 text-slate-500">
+                                                 <MapPin size={20} className="text-rose-600/50" />
+                                                 <span>Hà Nội, Việt Nam</span>
+                                              </div>
+                                           </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-col justify-between items-end border-l border-slate-100 pl-10">
+                                           <div className="text-right">
+                                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tổng cộng</p>
+                                              <p className="text-3xl font-black text-blue-600 tracking-tighter">{order.total.toLocaleString()} VNĐ</p>
+                                           </div>
+                                           <button className="group flex items-center gap-3 bg-slate-950 text-white px-8 py-4 rounded-2xl font-bold transition-all hover:bg-blue-600 shadow-lg shadow-slate-200">
+                                              Chi tiết
+                                              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                           </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                )}
+                
+                {!loading && filteredOrders.length === 0 && (
+                    <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100 shadow-sm flex flex-col items-center">
+                        <Clock className="w-16 h-16 text-slate-200 mb-6" />
+                        <h2 className="text-2xl font-black text-slate-400 uppercase italic tracking-tighter mb-4">Chưa có lịch sử đơn hàng</h2>
+                        <button className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
+                           Mua sắm ngay
+                        </button>
+                    </div>
+                )}
             </div>
-            
-            <div className="flex gap-4 p-2 bg-white rounded-2xl shadow-sm border border-slate-100">
-               <button className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-blue-200">Tất cả</button>
-               <button className="px-6 py-3 hover:bg-slate-50 text-slate-500 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">Đang giao</button>
-               <button className="px-6 py-3 hover:bg-slate-50 text-slate-500 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">Hoàn thành</button>
-            </div>
-          </div>
-
-          {/* Orders List */}
-          <div className="space-y-6">
-             {ORDERS.map((order, idx) => (
-                <motion.div 
-                  key={order.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-white rounded-[2.5rem] p-8 shadow-sm hover:shadow-2xl transition-all border border-slate-100 group relative overflow-hidden"
-                >
-                   {/* Background Glow */}
-                   <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-blue-500/5 blur-[80px] rounded-full group-hover:bg-blue-500/10 transition-all"></div>
-                   
-                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
-                      {/* Left side info */}
-                      <div className="flex items-center gap-6">
-                         <div className={`w-20 h-20 rounded-3xl flex items-center justify-center border transition-all group-hover:scale-110 group-hover:rotate-6 ${order.color}`}>
-                            <order.icon size={32} />
-                         </div>
-                         <div className="space-y-1">
-                            <h3 className="text-2xl font-black text-slate-800 tracking-tighter uppercase italic flex items-center gap-3">
-                               {order.id} 
-                               <span className="text-xs font-bold text-slate-300 not-italic tracking-widest font-sans">{order.date}</span>
-                            </h3>
-                            <p className="text-slate-500 font-medium line-clamp-1 max-w-sm">{order.items}</p>
-                            <div className="flex items-center gap-4 pt-2">
-                               <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-inner ${order.color}`}>
-                                  {order.status}
-                               </span>
-                               <span className="text-blue-600 font-black text-lg italic">{order.total}</span>
-                            </div>
-                         </div>
-                      </div>
-
-                      {/* Right side actions */}
-                      <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                         <button className="flex-1 lg:flex-none px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2 group/btn">
-                            Xem chi tiết <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                         </button>
-                         <button className="p-4 bg-slate-100 text-slate-400 hover:text-slate-800 rounded-2xl transition-all shadow-sm active:scale-95">
-                            <ExternalLink size={20} />
-                         </button>
-                      </div>
-                   </div>
-
-                   {/* Progress Indicator (Simplified) */}
-                   <div className="mt-10 pt-8 border-t border-slate-50 flex items-center justify-between">
-                      {[
-                        { label: 'Đặt hàng', done: true },
-                        { label: 'Thanh toán', done: true },
-                        { label: 'Đang giao', done: order.status === 'Đang giao' || order.status === 'Hoàn thành' },
-                        { label: 'Nhận hàng', done: order.status === 'Hoàn thành' }
-                      ].map((step, i, arr) => (
-                        <React.Fragment key={i}>
-                          <div className="flex flex-col items-center gap-2">
-                             <div className={`w-3 h-3 rounded-full transition-all duration-1000 ${step.done ? 'bg-blue-600 scale-125 ring-4 ring-blue-100' : 'bg-slate-200'}`}></div>
-                             <span className={`text-[9px] font-black uppercase tracking-widest ${step.done ? 'text-blue-600' : 'text-slate-300'}`}>{step.label}</span>
-                          </div>
-                          {i < arr.length - 1 && <div className={`flex-1 h-[2px] mx-4 transition-all duration-1000 ${arr[i+1].done ? 'bg-blue-600' : 'bg-slate-100'}`}></div>}
-                        </React.Fragment>
-                      ))}
-                   </div>
-                </motion.div>
-             ))}
-          </div>
-
-          {/* Empty State / Help Sidebar */}
-          <div className="bg-white p-12 rounded-[3.5rem] text-center space-y-6 border border-slate-100 shadow-sm relative overflow-hidden group">
-             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5"></div>
-             <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-4 relative z-10 group-hover:rotate-12 transition-transform">
-                <Box size={40} />
-             </div>
-             <div className="relative z-10 space-y-2">
-                <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Cần hỗ trợ về đơn hàng?</h3>
-                <p className="text-slate-500 max-w-sm mx-auto font-medium">Nếu có bất kỳ thắc mắc nào về vận chuyển hoặc đổi trả, hãy liên hệ Shop ngay nhé!</p>
-             </div>
-             <div className="relative z-10 pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button className="w-full sm:w-auto px-10 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 active:scale-95 flex items-center gap-3">
-                   Chat với CSKH <ArrowRight size={16} />
-                </button>
-                <button className="w-full sm:w-auto px-10 py-5 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 transition-all active:scale-95">Xem chính sách</button>
-             </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default OrderHistoryPage;

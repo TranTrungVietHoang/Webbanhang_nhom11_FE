@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, User, MessageCircle, Clock, Sparkles, CheckCheck, Paperclip, Smile, MoreVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const INITIAL_MESSAGES = [
-  { id: 1, text: 'Chào bạn, Shop có thể giúp gì cho bạn không?', sender: 'support', time: '10:00 AM' },
-  { id: 2, text: 'Tôi muốn hỏi về tình trạng đơn hàng #ORD-9928', sender: 'user', time: '10:02 AM' },
-  { id: 3, text: 'Dạ vâng, để Shop kiểm tra giúp bạn nhé. Đơn hàng của bạn đang được vận chuyển và dự kiến giao vào ngày mai ạ!', sender: 'support', time: '10:05 AM' },
-];
+import chatApi from '../../api/chatApi';
+import toast from 'react-hot-toast';
 
 const CustomerSupportChatPage = () => {
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -18,30 +15,60 @@ const CustomerSupportChatPage = () => {
   };
 
   useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const data = await chatApi.getMessages();
+      setMessages(data);
+    } catch (error) {
+      console.error("Failed to fetch messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
-    const newMessage = {
-      id: messages.length + 1,
+    
+    const userMsg = {
+      id: Date.now().toString(),
       text: input,
       sender: 'user',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    setMessages([...messages, newMessage]);
+
+    setMessages(prev => [...prev, userMsg]);
+    const textToSend = input;
     setInput('');
     
-    // Fake typing reply
-    setTimeout(() => {
-       const reply = {
-         id: messages.length + 2,
-         text: 'Cảm ơn bạn đã phản hồi. Vui lòng đợi trong giây lát, tư vấn viên sẽ phản hồi bạn ngay!',
-         sender: 'support',
-         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-       };
-       setMessages(prev => [...prev, reply]);
-    }, 1500);
+    try {
+      await chatApi.sendMessage({ text: textToSend, sender: 'user' });
+      
+      // Bot reply
+      setTimeout(async () => {
+         const botReply = {
+           text: 'Cảm ơn bạn đã liên hệ! Tư vấn viên sẽ phản hồi bạn trong giây lát.',
+           sender: 'bot',
+           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+         };
+         try {
+           const newMsg = await chatApi.sendMessage(botReply);
+           setMessages(prev => [...prev, { ...newMsg, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+         } catch (e) {
+           console.error("Bot reply error:", e);
+         }
+      }, 1000);
+    } catch (error) {
+      toast.error("Không thể gửi tin nhắn");
+      console.error("Lỗi khi gửi tin:", error);
+    }
   };
 
   return (
@@ -64,51 +91,62 @@ const CustomerSupportChatPage = () => {
                 </div>
              </div>
              <div className="flex items-center gap-2">
-                <button className="p-3 hover:bg-slate-50 text-slate-400 rounded-xl transition-all"><Clock size={20} /></button>
+                <button onClick={fetchMessages} className="p-3 hover:bg-slate-50 text-slate-400 rounded-xl transition-all"><Clock size={20} /></button>
                 <button className="p-3 hover:bg-slate-50 text-slate-400 rounded-xl transition-all"><MoreVertical size={20} /></button>
              </div>
           </div>
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide bg-slate-50/30">
-             <div className="text-center pb-4 text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Hôm nay, 10 Tháng 4</div>
-             
-             {messages.map((m, idx) => (
-                <motion.div 
-                  key={m.id}
-                  initial={{ opacity: 0, x: m.sender === 'user' ? 20 : -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'} space-y-2`}
-                >
-                   <div className={`max-w-[70%] p-5 rounded-[1.75rem] shadow-sm relative group ${
-                     m.sender === 'user' 
-                       ? 'bg-blue-600 text-white rounded-br-none' 
-                       : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'
-                   }`}>
-                      <p className="font-medium">{m.text}</p>
-                      {m.sender === 'user' && <CheckCheck size={14} className="absolute bottom-2 right-2 text-white/50" />}
-                   </div>
-                   <div className="flex items-center gap-2 px-2">
-                      {m.sender === 'support' && <span className="text-[10px] font-black uppercase text-blue-600 tracking-widest leading-none">SUPPORT</span>}
-                      <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">{m.time}</span>
-                   </div>
-                </motion.div>
-             ))}
-             <div ref={messagesEndRef} />
+             {loading ? (
+                <div className="flex items-center justify-center h-full">
+                   <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+             ) : messages.length === 0 ? (
+                <div className="text-center py-20">
+                   <p className="text-slate-400 font-bold uppercase tracking-widest">Bắt đầu cuộc trò chuyện mới</p>
+                </div>
+             ) : (
+                <>
+                  <div className="text-center pb-4 text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Hôm nay, {new Date().toLocaleDateString('vi-VN')}</div>
+                  {messages.map((m, idx) => (
+                    <motion.div 
+                      key={m.id || idx}
+                      initial={{ opacity: 0, x: (m.sender === 'user' || m.sender === 'customer') ? 20 : -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`flex flex-col ${ (m.sender === 'user' || m.sender === 'customer') ? 'items-end' : 'items-start'} space-y-2`}
+                    >
+                       <div className={`max-w-[70%] p-5 rounded-[1.75rem] shadow-sm relative group ${
+                         (m.sender === 'user' || m.sender === 'customer') 
+                           ? 'bg-blue-600 text-white rounded-br-none' 
+                           : 'bg-white text-slate-700 rounded-bl-none border border-slate-100'
+                       }`}>
+                          <p className="font-medium text-sm md:text-base">{m.text || m.messageContent}</p>
+                          {(m.sender === 'user' || m.sender === 'customer') && <CheckCheck size={14} className="absolute bottom-2 right-2 text-white/50" />}
+                       </div>
+                       <div className="flex items-center gap-2 px-2">
+                          {m.sender !== 'user' && m.sender !== 'customer' && <span className="text-[10px] font-black uppercase text-blue-600 tracking-widest leading-none">SUPPORT</span>}
+                          <span className="text-[10px] text-slate-400 font-bold uppercase leading-none">{m.time || new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                       </div>
+                    </motion.div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </>
+             )}
           </div>
 
           {/* Input Area */}
           <div className="p-6 bg-white border-t border-slate-100">
              <div className="flex items-center gap-4 bg-slate-50 p-2 rounded-[2rem] border border-slate-200 focus-within:ring-4 focus-within:ring-blue-50 focus-within:border-blue-600 transition-all group">
-                <button className="p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-full transition-all shadow-sm"><Smile size={24} /></button>
-                <button className="p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-full transition-all shadow-sm"><Paperclip size={24} /></button>
+                <button className="hidden md:block p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-full transition-all shadow-sm"><Smile size={24} /></button>
+                <button className="hidden md:block p-3 text-slate-400 hover:text-blue-600 hover:bg-white rounded-full transition-all shadow-sm"><Paperclip size={24} /></button>
                 <input 
                   type="text" 
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Viết nội dung tin nhắn..."
-                  className="flex-1 bg-transparent border-none outline-none font-medium text-slate-700 placeholder:text-slate-400"
+                  className="flex-1 bg-transparent border-none outline-none font-medium text-slate-700 placeholder:text-slate-400 px-4"
                 />
                 <button 
                   onClick={handleSend}
@@ -121,7 +159,7 @@ const CustomerSupportChatPage = () => {
         </div>
 
         {/* Quick Help Items */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+        <div className="hidden md:grid grid-cols-4 gap-6 mt-8">
            {[
              { label: 'Giao hàng', icon: Send, color: 'text-blue-600 bg-blue-50' },
              { label: 'Hoàn tiền', icon: Clock, color: 'text-rose-600 bg-rose-50' },

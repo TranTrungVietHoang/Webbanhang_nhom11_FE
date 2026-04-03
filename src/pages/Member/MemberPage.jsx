@@ -1,214 +1,211 @@
-import { useState, useEffect } from 'react';
-import Header from '../../components/Header/Header';
-import loyaltyApi from '../../api/loyaltyApi';
-import { Crown, TrendingUp, Gift, Award, Flame, ShoppingBag, CalendarCheck, Star, UserPlus } from 'lucide-react';
-
-const MemberBanner = ({ profile }) => {
-    if (!profile) return null;
-    
-    // Calculate progress percentage
-    const progressPercent = Math.min((profile.currentPoints / profile.nextTierPoints) * 100, 100);
-
-    return (
-        <div className="w-full bg-gradient-to-r from-[#D7D29F] via-[#E9E4A9] to-[#D7D29F] rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm relative overflow-hidden text-white mb-6 min-h-[220px]">
-            {/* Subtle background overlay effect */}
-            <div className="absolute inset-0 bg-white opacity-10"></div>
-            
-            <div className="flex justify-between items-start z-10 relative">
-                <div>
-                    <Crown className="w-12 h-12 mb-3 text-white fill-transparent opacity-90 stroke-2" />
-                    <h1 className="text-4xl font-light tracking-wide mb-2 text-white/95">{profile.tierName} Member</h1>
-                    <p className="text-white/80 font-medium">Chào mừng trở lại!</p>
-                    <p className="text-white/70 text-sm mt-1">Hạng hiện tại {profile.tierName}</p>
-                </div>
-                <div className="text-right">
-                    <p className="text-4xl font-light mb-1">{profile.currentPoints}</p>
-                    <p className="text-lg font-medium text-white/90">Điểm thưởng</p>
-                </div>
-            </div>
-
-            <div className="mt-8 z-10 relative">
-                <div className="flex justify-between items-end mb-2 text-sm text-white/90">
-                    <span>Còn {profile.requiredPoints} điểm nữa để lên hạng</span>
-                    <span>Hạng tiếp theo {profile.nextTierName}</span>
-                </div>
-                <div className="h-3 w-full bg-white/40 rounded-full overflow-hidden flex">
-                    <div className="h-full bg-[#FFD700] rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)]" style={{ width: `${progressPercent}%` }}></div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const StatCard = ({ icon: Icon, value, title, iconBgColor, iconColor }) => (
-    <div className="bg-[#F0F2F5] rounded-xl flex items-center p-4 shadow-sm w-full">
-        <div className={`p-3 rounded-xl flex-shrink-0 mr-4 ${iconBgColor}`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
-        </div>
-        <div>
-            <p className="text-lg font-bold text-gray-800">{value}</p>
-            <p className="text-sm text-gray-600">{title}</p>
-        </div>
-    </div>
-);
-
-const TierList = ({ tiers }) => {
-    if (!tiers) return null;
-    
-    // UI mapping for tier colors
-    const getTierStyle = (id) => {
-        switch(id) {
-            case 1: return { color: "bg-[#F39C12]", name: "Bronze" };
-            case 2: return { color: "bg-[#95A5A6]", name: "Silver" };
-            case 3: return { color: "bg-[#F1C40F]", name: "Gold" };
-            case 4: return { color: "bg-[#9B59B6]", name: "Platinum" };
-            default: return { color: "bg-gray-400", name: "Unknown" };
-        }
-    };
-
-    return (
-        <div className="mb-8">
-            <h2 className="text-xl font-medium text-gray-800 mb-4 tracking-wide font-serif">Hạng thành viên</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {tiers.map((tier) => {
-                    const style = getTierStyle(tier.id);
-                    return (
-                        <div key={tier.id} className={`rounded-xl border ${tier.isActive ? 'border-yellow-400 bg-[#F0F2F5]' : 'border-gray-200 bg-[#E8ECEF]'} p-6 py-8 shadow-sm flex flex-col justify-start relative`}>
-                            <div className={`${style.color} w-10 h-10 rounded-full flex justify-center items-center text-white font-medium mb-4 shadow-sm`}>
-                                {tier.id}
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-800 font-serif">{tier.name}</h3>
-                            <p className="text-xs text-gray-500 mb-4 border-b border-gray-300 pb-2">{tier.pointRange}</p>
-                            
-                            <ul className="space-y-2 flex-grow">
-                                {tier.benefits.map((benefit, idx) => (
-                                    <li key={idx} className="flex items-start text-sm text-gray-700">
-                                        <span className="text-[#F1C40F] mr-2">✦</span>
-                                        {benefit}
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-};
-
-const PointRulesList = ({ rules }) => {
-    if (!rules) return null;
-
-    const getIcon = (iconName) => {
-        switch(iconName) {
-            case 'shopping-bag': return <ShoppingBag className="w-6 h-6 text-blue-500 mr-3" />;
-            case 'calendar-check': return <CalendarCheck className="w-6 h-6 text-green-500 mr-3" />;
-            case 'star': return <Star className="w-6 h-6 text-yellow-500 mr-3" />;
-            case 'user-plus': return <UserPlus className="w-6 h-6 text-purple-500 mr-3" />;
-            default: return null;
-        }
-    };
-
-    return (
-        <div>
-            <h2 className="text-xl font-medium text-gray-800 mb-4 tracking-wide font-serif">Cách tính điểm</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {rules.map((rule) => (
-                    <div key={rule.id} className="bg-[#E4E6E8] border border-gray-300 rounded-lg p-4 flex items-center">
-                        {getIcon(rule.icon)}
-                        <div>
-                            <h4 className="font-bold text-gray-800 text-base">{rule.title}</h4>
-                            <p className="text-sm text-gray-600">{rule.description}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-};
+import React, { useState } from 'react';
+import { 
+    Crown, 
+    TrendingUp, 
+    Gift, 
+    Award, 
+    Flame, 
+    Ticket, 
+    Star, 
+    Truck, 
+    Box, 
+    Sparkles, 
+    ShoppingBag, 
+    Users, 
+    CalendarCheck, 
+    Calendar
+} from 'lucide-react';
 
 const MemberPage = () => {
-    const [loyaltyData, setLoyaltyData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('Đổi thưởng');
 
-    useEffect(() => {
-        const fetchLoyalty = async () => {
-            try {
-                const data = await loyaltyApi.getProfile();
-                setLoyaltyData(data);
-            } catch (error) {
-                console.error("Lỗi fetch API loyalty:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchLoyalty();
-    }, []);
+    const statCards = [
+        { icon: TrendingUp, value: '+ 1000', label: 'Điểm tháng này', iconColor: 'text-blue-500' },
+        { icon: Gift, value: '5', label: 'Phần thưởng đã đổi', iconColor: 'text-green-500' },
+        { icon: Award, value: '2/4', label: 'Nhiệm vụ hoàn thành', iconColor: 'text-purple-500' },
+        { icon: Flame, value: '7', label: 'Ngày streak', iconColor: 'text-red-500' },
+    ];
+
+    const rewards = [
+        { id: 1, name: 'Voucher giảm 50K', points: 250, stock: 50, icon: Ticket, iconColor: 'text-red-400' },
+        { id: 2, name: 'Voucher giảm 100K', points: 550, stock: 50, icon: Star, iconColor: 'text-yellow-400' },
+        { id: 3, name: 'Voucher giảm 200K', points: 1000, stock: 20, icon: Gift, iconColor: 'text-red-500' },
+        { id: 4, name: 'Freeship toàn quốc', points: 150, stock: 100, icon: Truck, iconColor: 'text-teal-500' },
+        { id: 5, name: 'Mystery Box', points: 300, stock: 15, icon: Box, iconColor: 'text-pink-300' },
+        { id: 6, name: 'Quà đặc biệt', points: 3000, stock: 1, icon: Sparkles, iconColor: 'text-blue-500', disabled: true },
+    ];
+
+    const history = [
+        { id: 1, title: 'Mua hàng đơn #1245', date: '24/01/2026', points: '+500', isEarn: true, icon: ShoppingBag },
+        { id: 2, title: 'Hoàn thành nhiệm vụ hàng ngày', date: '24/01/2026', points: '+50', isEarn: true, icon: Award },
+        { id: 3, title: 'Đổi voucher giảm 100k', date: '23/01/2026', points: '-500', isEarn: false, icon: Gift },
+        { id: 4, title: 'Giới thiệu bạn bè', date: '22/01/2026', points: '+200', isEarn: true, icon: Users },
+        { id: 5, title: 'Checkin liên tiếp 7 ngày', date: '21/01/2026', points: '+100', isEarn: true, icon: CalendarCheck },
+        { id: 6, title: 'Viết đánh giá sản phẩm', date: '20/01/2026', points: '+60', isEarn: true, icon: Star },
+    ];
+
+    const missions = [
+        { id: 1, title: 'Check-in hàng ngày', desc: 'Truy cập website mỗi ngày', points: '+10 điểm', progress: 100, icon: Calendar },
+        { id: 2, title: 'Mua sắm trong tuần', desc: 'Hoàn thành 1 đơn hàng', points: '+100 điểm', progress: 0, icon: ShoppingBag },
+        { id: 3, title: 'Viết 3 đánh giá', desc: 'Đánh giá sản phẩm đã mua', points: '+20 điểm', progress: 33, icon: Star },
+        { id: 4, title: 'Giới thiệu bạn bè', desc: 'Mời 2 người đăng ký', points: '+100 điểm', progress: 50, icon: Users },
+    ];
 
     return (
-        <div className="min-h-screen bg-white font-sans flex flex-col">
-            <Header />
-
-            <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-20 max-w-[1200px]">
-                {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#D7D29F]"></div>
+        <div className="bg-white min-h-screen pb-20 pt-6">
+            <div className="container mx-auto px-4 lg:px-8 max-w-5xl">
+                
+                {/* Gold Banner */}
+                <div className="bg-gradient-to-r from-[#d9ca96] via-[#eee3bd] to-[#d9ca96] rounded-xl p-8 text-white relative overflow-hidden mb-6 shadow-sm">
+                    <div className="flex justify-between items-start mb-6 w-full">
+                        <div>
+                            <Crown className="w-10 h-10 mb-2 opacity-90 stroke-2" stroke="white" fill="transparent" />
+                            <h1 className="text-3xl font-light tracking-wide mb-1 opacity-95">Gold Member</h1>
+                            <p className="text-sm font-medium opacity-90">Chào mừng trở lại !</p>
+                            <p className="text-xs mt-3 opacity-90">Hạng hiện tại Gold</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-3xl font-light tracking-wide">2900</p>
+                            <p className="text-lg opacity-90 font-medium">Điểm thưởng</p>
+                        </div>
                     </div>
-                ) : (
-                    loyaltyData && (
-                        <>
-                            {/* Top Banner */}
-                            <MemberBanner profile={loyaltyData.profile} />
+                    
+                    <div className="w-full">
+                        <div className="flex justify-between items-end mb-2 text-xs opacity-90 font-medium">
+                            <p>Còn 2100 điểm nữa để lên hạng</p>
+                            <p>Hạng tiếp theo Platium</p>
+                        </div>
+                        <div className="w-full bg-white/50 rounded-full h-2.5">
+                            <div className="bg-[#ffd700] h-2.5 rounded-full" style={{ width: '58%' }}></div>
+                        </div>
+                    </div>
+                </div>
 
-                            {/* Stat Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                <StatCard 
-                                    icon={TrendingUp} 
-                                    value={`+ ${loyaltyData.profile.stats.monthPoints}`} 
-                                    title="Điểm tháng này" 
-                                    iconBgColor="bg-blue-100" 
-                                    iconColor="text-blue-500" 
-                                />
-                                <StatCard 
-                                    icon={Gift} 
-                                    value={loyaltyData.profile.stats.rewardsRedeemed} 
-                                    title="Phần thưởng đã đổi" 
-                                    iconBgColor="bg-green-100" 
-                                    iconColor="text-green-500" 
-                                />
-                                <StatCard 
-                                    icon={Award} 
-                                    value={`${loyaltyData.profile.stats.missionsCompleted}/${loyaltyData.profile.stats.missionsTotal}`} 
-                                    title="Nhiệm vụ hoàn thành" 
-                                    iconBgColor="bg-purple-100" 
-                                    iconColor="text-purple-500" 
-                                />
-                                <StatCard 
-                                    icon={Flame} 
-                                    value={loyaltyData.profile.stats.streakDays} 
-                                    title="Ngày streak" 
-                                    iconBgColor="bg-red-100" 
-                                    iconColor="text-red-500" 
-                                />
+                {/* Status Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {statCards.map((stat, idx) => (
+                        <div key={idx} className="bg-[#f0f2f5] rounded-xl p-4 flex items-center justify-center gap-3 w-full border border-gray-100">
+                            <stat.icon className={`w-6 h-6 ${stat.iconColor} flex-shrink-0`} />
+                            <div className="flex flex-col items-center">
+                                <span className="font-bold text-gray-800 text-sm whitespace-nowrap">{stat.value}</span>
+                                <span className="text-xs text-gray-600 whitespace-nowrap">{stat.label}</span>
                             </div>
+                        </div>
+                    ))}
+                </div>
 
-                            {/* Navigation Tabs */}
-                            <div className="flex bg-[#E8ECEF] rounded-lg p-1.5 mb-8 space-x-1 overflow-x-auto overflow-y-hidden text-sm">
-                                <button className="px-6 py-2 rounded shadow-sm bg-[#248EEB] text-white font-medium whitespace-nowrap">Tổng quan</button>
-                                <button className="px-6 py-2 rounded bg-transparent text-gray-600 hover:bg-gray-200 transition font-medium whitespace-nowrap">Đổi thưởng</button>
-                                <button className="px-6 py-2 rounded bg-transparent text-gray-600 hover:bg-gray-200 transition font-medium whitespace-nowrap">Nhiệm vụ</button>
-                                <button className="px-6 py-2 rounded bg-transparent text-gray-600 hover:bg-gray-200 transition font-medium whitespace-nowrap">Lịch sử</button>
+                {/* Tabs */}
+                <div className="bg-[#e8ecef] rounded-lg p-1.5 flex gap-1 mb-8 overflow-x-auto text-sm">
+                    {['Tổng quan', 'Đổi thưởng', 'Nhiệm vụ', 'Lịch sử'].map(tab => (
+                        <button 
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2 rounded-md font-medium whitespace-nowrap transition-colors ${
+                                activeTab === tab 
+                                    ? 'bg-[#0088ff] text-white shadow-sm' 
+                                    : 'text-gray-600 hover:bg-gray-200'
+                            }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tab Content */}
+                <div className="font-sans">
+                    
+                    {/* Đổi thưởng */}
+                    {activeTab === 'Đổi thưởng' && (
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800 mb-4 font-serif">Đổi điểm lấy quà</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {rewards.map(reward => (
+                                    <div key={reward.id} className="bg-[#eef0f3] rounded-xl overflow-hidden border border-gray-200 flex flex-col items-center p-6 pb-4">
+                                        <div className="mb-4">
+                                            <reward.icon className={`w-12 h-12 ${reward.iconColor}`} strokeWidth={1.5} />
+                                        </div>
+                                        <h3 className="font-sans font-semibold text-gray-800 mb-4">{reward.name}</h3>
+                                        <div className="w-full flex justify-between items-end mb-2">
+                                            <span className="text-[#0066cc] font-medium text-sm">{reward.points} điểm</span>
+                                            <span className="text-gray-500 text-[10px]">Còn {reward.stock}</span>
+                                        </div>
+                                        <button 
+                                            className={`w-full py-2 rounded-md font-sans text-sm font-medium transition-colors ${
+                                                reward.disabled 
+                                                    ? 'bg-[#0055d4] text-white cursor-not-allowed' 
+                                                    : 'bg-[#0066ff] hover:bg-blue-700 text-white'
+                                            }`}
+                                        >
+                                            {reward.disabled ? 'Không đủ điểm' : 'Đổi ngay'}
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
+                        </div>
+                    )}
 
-                            {/* Tiers List */}
-                            <TierList tiers={loyaltyData.tiers} />
+                    {/* Lịch sử */}
+                    {activeTab === 'Lịch sử' && (
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800 mb-4 font-sans">Lịch sử điểm</h2>
+                            <div className="space-y-4">
+                                {history.map(item => (
+                                    <div key={item.id} className="bg-[#f2f4f6] rounded-xl p-5 flex items-center justify-between border border-gray-100">
+                                        <div className="flex items-center gap-4">
+                                            <item.icon className={`w-5 h-5 ${item.isEarn ? 'text-green-500' : 'text-red-300'}`} />
+                                            <div>
+                                                <p className="font-bold text-sm text-gray-800">{item.title}</p>
+                                                <p className="text-xs font-sans text-gray-800 font-medium mt-1">{item.date}</p>
+                                            </div>
+                                        </div>
+                                        <div className={`font-bold text-sm ${item.isEarn ? 'text-green-500' : 'text-red-500'}`}>
+                                            {item.points}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                            {/* Point Rules */}
-                            <PointRulesList rules={loyaltyData.rules} />
-                        </>
-                    )
-                )}
-            </main>
+                    {/* Nhiệm vụ */}
+                    {activeTab === 'Nhiệm vụ' && (
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800 mb-4 font-sans">Nhiệm vụ hôm nay</h2>
+                            <div className="space-y-4">
+                                {missions.map(mission => (
+                                    <div key={mission.id} className="bg-[#f0f2f5] rounded-xl p-6 flex flex-col border border-gray-100">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-4">
+                                                <mission.icon className="w-6 h-6 text-[#0066ff]" strokeWidth={1.5}/>
+                                                <div>
+                                                    <p className="font-bold text-sm text-gray-800">{mission.title}</p>
+                                                    <p className="text-xs text-gray-600 font-sans mt-0.5">{mission.desc}</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-[#ffe8a1] px-3 py-1 rounded-full">
+                                                <span className="text-[11px] font-medium text-gray-800">{mission.points}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="w-full h-2.5 bg-[#b0b0b0] rounded-full overflow-hidden mb-2">
+                                            <div className="h-full bg-[#0066ff] rounded-full" style={{ width: `${mission.progress}%` }}></div>
+                                        </div>
+                                        <p className="text-[11px] text-gray-500 font-sans">{mission.progress}% hoàn thành</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tổng quan */}
+                    {activeTab === 'Tổng quan' && (
+                        <div className="text-center py-20 text-gray-500">
+                            Dữ liệu tổng quan đang được cập nhật...
+                        </div>
+                    )}
+
+                </div>
+            </div>
         </div>
     );
 };

@@ -1,6 +1,37 @@
-import { Search, ShoppingCart, Bell, Settings, User } from 'lucide-react';
+import { Search, ShoppingCart, Bell, Settings, User, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Header() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
+
+  console.log('[Header] Rendering with user:', user);
+  console.log('[Header] user?.fullName:', user?.fullName);
+  console.log('[Header] user?.email:', user?.email);
+
+  const handleLogout = () => {
+    console.log('[Header.handleLogout] CLICKED!');
+    console.log('[Header.handleLogout] Before logout - user:', user);
+    logout();
+    console.log('[Header.handleLogout] After logout called');
+    navigate('/login');
+    console.log('[Header.handleLogout] Navigate to /login called');
+  };
+
+  // Lấy chữ cái đầu của tên
+  const getInitial = () => {
+    if (user?.fullName) {
+      const initial = user.fullName.charAt(0).toUpperCase();
+      console.log('[Header.getInitial] Returning:', initial, 'from user:', user.fullName);
+      return initial;
+    }
+    console.log('[Header.getInitial] No user, returning U');
+    return 'U';
+  };
+
   return (
     <header className="h-20 bg-white shadow-sm flex items-center justify-between px-8 border-b">
       {/* Search Bar */}
@@ -32,11 +63,43 @@ export default function Header() {
         </button>
         
         {/* Profile */}
-        <div className="flex items-center gap-2 pl-4 border-l">
-          <span className="font-bold text-sm tracking-widest text-black">ADMIN</span>
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-             <User size={18} className="text-gray-500" />
+        <div className="flex items-center gap-2 pl-4 border-l relative">
+          <div className="text-right">
+            <div className="font-bold text-sm tracking-widest text-black">
+              {user?.fullName || 'ADMIN'}
+            </div>
+            <div className="text-xs text-gray-500">{user?.email}</div>
           </div>
+          <button
+            onClick={() => {
+              console.log('[Header] Avatar button clicked');
+              setShowMenu(!showMenu);
+            }}
+            className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm hover:bg-blue-700 transition"
+          >
+            {getInitial()}
+          </button>
+
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div className="p-4 border-b">
+                <p className="font-semibold text-sm">{user?.fullName}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
+              <button
+                onClick={(e) => {
+                  console.log('[Header] Logout button clicked, e:', e);
+                  e.preventDefault();
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition"
+              >
+                <LogOut size={18} />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

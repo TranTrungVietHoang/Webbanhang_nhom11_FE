@@ -1,5 +1,7 @@
 import { BarChart3, Package, ShoppingCart, Users, TicketPercent, LogOut } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { name: 'Doanh thu', path: '/doanh-thu', icon: BarChart3 },
@@ -10,6 +12,20 @@ const navItems = [
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  console.log('[Sidebar] Rendering');
+
+  const handleLogout = () => {
+    console.log('[Sidebar] Logout button clicked');
+    setIsLoggingOut(true);
+    logout();
+    console.log('[Sidebar] logout() called, navigating to /login');
+    navigate('/login');
+  };
+
   return (
     <aside className="w-60 bg-[#2D313A] text-white flex flex-col min-h-screen shrink-0 font-medium">
       {/* Logo */}
@@ -39,9 +55,16 @@ export default function Sidebar() {
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-700">
-        <button className="flex items-center gap-4 px-4 py-3 text-white hover:text-red-400 transition-colors w-full">
+        <button 
+          onClick={() => {
+            console.log('[Sidebar] Logout button clicked, isLoggingOut:', isLoggingOut);
+            handleLogout();
+          }}
+          disabled={isLoggingOut}
+          className="flex items-center gap-4 px-4 py-3 text-white hover:text-red-400 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <LogOut size={22} className="text-red-500" />
-          <span className="text-lg">Đăng xuất</span>
+          <span className="text-lg">{isLoggingOut ? 'Đang thoát...' : 'Đăng xuất'}</span>
         </button>
       </div>
     </aside>
